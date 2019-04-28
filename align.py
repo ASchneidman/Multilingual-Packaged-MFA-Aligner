@@ -8,6 +8,7 @@ import numpy as np
 
 MFA_ALIGNER = '../montreal-forced-aligner/bin/'
 G2P_MODEL = 'spanish_g2p.zip'
+LANG_MODEL = 'spanish.zip'
 
 def output_h5py(intervals, work_dir, video_id, name):
     data = {}
@@ -38,7 +39,7 @@ def align(video_id,lang):
     subprocess.check_call(MFA_ALIGNER + 'mfa_generate_dictionary ' + G2P_MODEL + ' ' + corpus + ' ' + video_dict,shell=True)
 
     output_dir = os.path.join(work_dir,video_id + '_aligned')
-    align_call = MFA_ALIGNER + 'mfa_align ' + corpus + ' ' + video_dict + ' spanish.zip ' + output_dir
+    align_call = MFA_ALIGNER + 'mfa_align ' + corpus + ' ' + video_dict + ' ' + LANG_MODEL + ' ' + output_dir
     subprocess.check_call(align_call,shell=True)
 
     word_intervals,phone_intervals = get_tuples(output_dir)
