@@ -5,8 +5,9 @@ import subprocess
 from corpus_to_tuples import get_tuples
 import h5py
 import numpy as np
+import argparse
 
-MFA_ALIGNER = '../montreal-forced-aligner/bin/'
+MFA_ALIGNER = 'montreal-forced-aligner/bin/'
 G2P_MODEL = 'spanish_g2p.zip'
 LANG_MODEL = 'spanish.zip'
 
@@ -24,31 +25,44 @@ def output_h5py(intervals, work_dir, video_id, name):
     write5Handle.close()
 
 def align(video_id,lang):
-    os.mkdir(video_id)
+    try:
+        os.mkdir(video_id)
+    except Exception as e:
+        print(video_id + " folder already found. Quitting.")
+        sys.exit(0)
+
     work_dir = video_id
+    # Download the video, wav, and transcription
     dwnld(video_id, work_dir)
 
     transcription = os.path.join(work_dir,video_id + '.' + lang + '.vtt')
     wav = os.path.join(work_dir,video_id + '.wav')
     unaligned = os.path.join(work_dir,video_id + '_unaligned')
+
+    # Split and assemble data into corpus accepted by MFA
     make_corpus(wav,transcription,unaligned)
     corpus = unaligned
     video_dict = os.path.join(work_dir,video_id + '_dict.txt')
 
-    # generate dictionary
+    # Generate dictionary
     subprocess.check_call(MFA_ALIGNER + 'mfa_generate_dictionary ' + G2P_MODEL + ' ' + corpus + ' ' + video_dict,shell=True)
 
+    # Run the alignment tool
     output_dir = os.path.join(work_dir,video_id + '_aligned')
     align_call = MFA_ALIGNER + 'mfa_align ' + corpus + ' ' + video_dict + ' ' + LANG_MODEL + ' ' + output_dir
     subprocess.check_call(align_call,shell=True)
 
     word_intervals,phone_intervals = get_tuples(output_dir)
 
+    # Assemble the h5py files
     output_h5py(word_intervals, work_dir, video_id, "words")
     output_h5py(word_intervals, work_dir, video_id, "phones")
 
-    print(word_intervals)
-
+    #print(word_intervals)
 
 if __name__ == '__main__':
-    align(sys.argv[1],sys.argv[2])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('video_id', type=str, help='The youtube ID of the video to be aligned.')
+    parser.add_argument('lang', type=str, help='The language code of the video.')
+    args = parser.parse_args()
+    align(args.video_id, args.lang)
