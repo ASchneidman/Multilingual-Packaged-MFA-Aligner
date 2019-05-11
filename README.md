@@ -11,3 +11,7 @@ https://montreal-forced-aligner.readthedocs.io/en/latest/pretrained_models.html
 and change the `G2P_MODEL` and `LANG_MODEL` paramters to their locations. Additionally, change the `MFA_ALIGNER`
 parameter to the directory where you downloaded the Montreal Forced Aligner.
 
+Example:
+To align the video Lga-oupKJx4 (a spanish math video), place a trained spanish model, spanish g2p model, and the MFA in the same directory as align.py. Then run
+
+```python align.py Lga-oupKJx4 es```
